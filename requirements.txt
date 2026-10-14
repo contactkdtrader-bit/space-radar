@@ -1,6 +1,2 @@
-fastapi==0.110.0
-uvicorn==0.28.0
-pydantic==2.6.4
-solders==0.21.0
-solana==0.32.0
-colorama==0.4.6
+pyphem
+pandas
