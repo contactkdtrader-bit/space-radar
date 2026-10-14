@@ -58,3 +58,8 @@ if st.button("🔄 Refresh Radar Scan"):
     df = pd.DataFrame(results)
     st.dataframe(df, use_container_width=True)
     st.success("Omni-Radar cloud engine executed successfully!")
+st.markdown("---")
+st.subheader("📬 Business & Inquiries")
+st.write("Want to buy this software or customize it for your satellites?")
+# ਆਪਣੀ ਅਸਲੀ ਈਮੇਲ ਆਈਡੀ ਇੱਥੇ ਲਿਖੋ
+st.write("📩 Email me directly at: contactkdtrader@gmail.com") 
