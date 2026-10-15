@@ -37,7 +37,7 @@ try:
 except:
     pass
 
-# 2. Strict Aerospace Dark Console UI Styling
+# 2. Strict Aerospace Dark Console UI Styling & Raw Table Formatter
 st.markdown("""
     <style>
     .stApp {
@@ -64,6 +64,65 @@ st.markdown("""
         border-bottom: 1px solid #1E293B;
         padding-bottom: 8px;
         margin-bottom: 15px;
+    }
+    
+    /* 🎨 STRICT SCIENTIST LAB DATA TABLE LAYOUT MAPPING THE SCREENSHOT */
+    .nasa-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        font-size: 13px;
+        text-align: left;
+    }
+    .nasa-table th {
+        background-color: #0D1326;
+        color: #38BDF8;
+        padding: 12px;
+        font-weight: bold;
+        border-bottom: 2px solid #1E293B;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+    }
+    .nasa-table td {
+        padding: 12px;
+        border-bottom: 1px solid #1E293B;
+        color: #E2E8F0;
+    }
+    
+    /* 🛸 CRUNCH CONSOLE BADGE TAG BUTTONS */
+    .badge-nominal {
+        background-color: #006622;
+        color: #FFFFFF !important;
+        font-weight: bold;
+        border-radius: 4px;
+        padding: 4px 10px;
+        font-size: 11px;
+        border: 1px solid #00FF66;
+        display: inline-block;
+        letter-spacing: 0.5px;
+    }
+    .badge-warning {
+        background-color: #B37400;
+        color: #FFFFFF !important;
+        font-weight: bold;
+        border-radius: 4px;
+        padding: 4px 10px;
+        font-size: 11px;
+        border: 1px solid #FFA500;
+        display: inline-block;
+        letter-spacing: 0.5px;
+    }
+    .badge-critical {
+        background-color: #990011;
+        color: #FFFFFF !important;
+        font-weight: bold;
+        border-radius: 4px;
+        padding: 4px 10px;
+        font-size: 11px;
+        border: 1px solid #FF3333;
+        display: inline-block;
+        letter-spacing: 0.5px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -201,44 +260,3 @@ def calculate_distance(sat, deb, t_minutes):
     sat_anomaly = (sat["n"] * dt * 2 * math.pi)
     deb_anomaly = (deb["n"] * dt * 2 * math.pi)
     x1 = 6738.1 * math.cos(sat_anomaly) * math.cos(math.radians(sat["raan"]))
-    y1 = 6738.1 * math.sin(sat_anomaly) * math.cos(math.radians(sat["inc"]))
-    x2 = 6750.0 * math.cos(deb_anomaly) * math.cos(math.radians(debris["raan"]))
-    y2 = 6750.0 * math.sin(deb_anomaly) * math.cos(math.radians(debris["inc"]))
-    return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-
-if run_sweep:
-    results = []
-    now = datetime.utcnow()
-    target_names = df_filtered["Asset Identifier"].head(max_scan).tolist()
-    
-    try:
-        trigger_admin_email_notification("RADAR_SWEEP_EXECUTED (Active Assessment Clicked)", visitor_country, f"Targets Scanned: {max_scan}")
-    except:
-        pass
-        
-    with st.spinner(f"Computing conjunction vector nodes for selected operational assets..."):
-        time.sleep(1.0)
-        for sat_name in target_names:
-            param = all_satellites_dict[sat_name]
-            min_dist = float('inf')
-            tca_minutes = 0
-            
-            for minutes in range(0, 1440, 4):
-                dist = calculate_distance(param, debris, minutes)
-                if dist < min_dist:
-                    min_dist = dist
-                    tca_minutes = minutes
-            
-            tca_time = now + timedelta(minutes=tca_minutes)
-            rel_velocity = 7.4 + (param["inc"] * 0.008)
-            
-            if min_dist < 400.0:
-                p_c = "2.14e-04"
-                status = "🚨 CRITICAL ALERT"
-            elif min_dist < 1200.0:
-                p_c = "5.82e-06"
-                status = "⚠️ WARNING"
-            else:
-                p_c = "< 1e-07"
-                status = "✅ NOMINAL"
-                
