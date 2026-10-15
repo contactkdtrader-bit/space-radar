@@ -242,4 +242,3 @@ if run_sweep:
                 p_c = "< 1e-07"
                 status = "✅ NOMINAL"
                 
-            results.append({
