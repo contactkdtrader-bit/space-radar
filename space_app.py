@@ -104,7 +104,7 @@ t_now = time.time() / 60.0
 coordinates = []
 
 for name, param in protected_satellites.items():
-    for minutes in range(0, 1440, 20): # Generate clean orbit path lines
+    for minutes in range(0, 1440, 20):
         angle = (param["n"] * (t_now + minutes) * 2 * math.pi) / 100
         lon = ((param["raan"] + math.degrees(math.cos(angle))) % 360) - 180
         lat = (param["inc"] * math.sin(angle))
@@ -119,7 +119,6 @@ for minutes in range(0, 1440, 20):
 
 df_coords = pd.DataFrame(coordinates)
 
-# Beautiful Neon Scatter Chart representing the scientist lab grid
 st.scatter_chart(
     df_coords,
     x="Longitude (X)",
@@ -159,16 +158,16 @@ if st.button("📡 INITIALIZE RADAR SWEEP NETWORK", type="primary", use_containe
         
         df_results = pd.DataFrame(results)
         
-        # Core Monitors (Scientist Blocks)
         st.markdown("<h3 style='font-family: monospace; color: #00FF66;'>📊 REAL-TIME TELEMETRY MONITORS</h3>", unsafe_allow_html=True)
         cols = st.columns(len(results))
         for index, row in df_results.iterrows():
             with cols[index]:
                 card_style = "danger-card" if "THREAT" in row["Status"] else "lab-card"
+                # ਇੱਥੇ row['NORAD ID'] ਨੂੰ ਬਿਲਕੁਲ ਸਹੀ ਸਪੇਸ ਨਾਲ ਲਿਖ ਦਿੱਤਾ ਹੈ
                 st.markdown(f"""
                     <div class='{card_style}'>
                         <h4 style='margin:0; color:#FFFFFF; font-family:monospace;'>🛰️ {row['Asset']}</h4>
-                        <p style='margin:5px 0 0 0; color:#8A99AD; font-size:12px; font-family:monospace;'>NORAD ID: {row['NORAD_ID']}</p>
+                        <p style='margin:5px 0 0 0; color:#8A99AD; font-size:12px; font-family:monospace;'>NORAD ID: {row['NORAD ID']}</p>
                     </div>
                     """, unsafe_allow_html=True)
                 st.metric(label="Closest Approach Distance", value=f"{row['Closest Approach']:.2f} KM", delta=row["Status"])
