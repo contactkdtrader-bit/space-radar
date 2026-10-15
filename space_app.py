@@ -241,6 +241,4 @@ if run_sweep:
         st.write(df_res.to_html(escape=False, index=False), unsafe_allow_html=True)
         st.success("Logistics sync completed. Conjunction matrix populated against active fleet.")
 
-# 8. Enterprise Institutional Footer (Fixed Triple Quote)
-st.markdown("<br><hr style='border-color: #1E293B;'>", unsafe_allow_html=True)
-st.markdown("""
+# 8. Enterprise Institutional Footer (Strictly Simplified Single Line)
