@@ -94,6 +94,39 @@ st.sidebar.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# Enterprise Portal / Lead Capture Module in Sidebar
+st.sidebar.markdown("<br>", unsafe_allow_html=True)
+st.sidebar.markdown("<h4 style='color: #38BDF8; font-size:13px; letter-spacing:1.5px;'>🛰️ ENTERPRISE PORTAL</h4>", unsafe_allow_html=True)
+
+# Replace 'YOUR_FORM_ID_HERE' with your Formspree Form ID (e.g. https://formspree.io/f/xbjnqweo)
+FORMSPREE_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID_HERE" 
+
+enterprise_html = f"""
+<div style="background-color: #0D1326; padding: 15px; border-radius: 4px; border: 1px solid #1E293B;">
+    <form action="{FORMSPREE_ENDPOINT}" method="POST">
+        <label style="color: #64748B; font-size: 11px; font-weight: bold;">SELECT ENGAGEMENT MODEL</label><br>
+        <select name="service_type" style="width: 100%; margin-bottom: 12px; background: #060913; color: #38BDF8; border: 1px solid #1E293B; padding: 6px; border-radius: 3px; font-size: 12px;">
+            <option value="API Access">Request Enterprise API Access</option>
+            <option value="Custom SSA">Deploy Custom SSA Solution</option>
+            <option value="Consultation">Collaborate / Technical Consultation</option>
+            <option value="Custom Engineering">Commission Custom Engineering</option>
+        </select><br>
+        
+        <label style="color: #64748B; font-size: 11px; font-weight: bold;">CORPORATE / PROFESSIONAL EMAIL</label><br>
+        <input type="email" name="email" required placeholder="name@organization.com" style="width: 100%; margin-bottom: 12px; background: #060913; color: white; border: 1px solid #1E293B; padding: 6px; border-radius: 3px; font-size: 12px;"><br>
+        
+        <label style="color: #64748B; font-size: 11px; font-weight: bold;">PROJECT / DEPLOYMENT REQUIREMENTS</label><br>
+        <textarea name="message" required rows="3" placeholder="Specify orbital parameters, data feeds, or custom integration needs..." style="width: 100%; margin-bottom: 12px; background: #060913; color: white; border: 1px solid #1E293B; padding: 6px; border-radius: 3px; font-size: 12px;"></textarea><br>
+        
+        <button type="submit" style="width: 100%; background-color: #38BDF8; color: #060913; font-weight: bold; border: none; padding: 9px; border-radius: 3px; cursor: pointer; letter-spacing: 1px; font-size: 12px;">
+            SUBMIT DISPATCH 🚀
+        </button>
+    </form>
+</div>
+"""
+
+st.sidebar.markdown(enterprise_html, unsafe_allow_html=True)
+
 # 5. Fetch Robust Active Fleet Data from Multiple Catalogs
 @st.cache_data(ttl=3600)
 def fetch_robust_active_fleet():
@@ -101,7 +134,7 @@ def fetch_robust_active_fleet():
     live_sats = {}
     
     for group in groups:
-        url = f"https://celestrak.org{group}&FORMAT=json"
+        url = f"https://celestrak.org/NORAD/elements/gp.php?GROUP={group}&FORMAT=json"
         try:
             response = requests.get(url, timeout=8)
             if response.status_code == 200:
@@ -200,7 +233,7 @@ if run_sweep:
     now = datetime.utcnow()
     target_names = df_filtered["Asset Identifier"].head(max_scan).tolist()
     
-    with st.spinner(f"Computing conjunction vector nodes for selected operational assets..."):
+    with st.spinner("Computing conjunction vector nodes for selected operational assets..."):
         time.sleep(1.0)
         for sat_name in target_names:
             param = all_satellites_dict[sat_name]
@@ -241,4 +274,5 @@ if run_sweep:
         st.write(df_res.to_html(escape=False, index=False), unsafe_allow_html=True)
         st.success("Logistics sync completed. Conjunction matrix populated against active fleet.")
 
-# 8. Enterprise Institutional Footer (Strictly Simplified Single Line)
+# 8. Enterprise Institutional Footer
+st.markdown("<br><hr style='border: 0.5px solid #1E293B;'><div style='text-align: center; color: #64748B; font-size: 11px;'>GLOBAL SSA OPERATIONAL COMMAND // QUANTITATIVE TELEMETRY CORE</div>", unsafe_allow_html=True)
