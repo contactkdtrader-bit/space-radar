@@ -4,20 +4,69 @@ import pandas as pd
 import math
 import time
 import requests
-import pydeck as pdk
 
-st.set_page_config(page_title="NORAD/SSA Control Center", page_icon="🛸", layout="wide")
+# 1. Page Config
+st.set_page_config(page_title="NORAD SSA CONTROL", page_icon="🛸", layout="wide")
 
-# Sci-Fi Scientist Lab Header
+# 2. Advanced Sci-Fi Dark Theme CSS Injection
 st.markdown("""
-    <h1 style='text-align: center; color: #00FF66; font-family: monospace;'>🛸 NORAD MISSION CONTROL: GLOBAL ORBITAL RADAR</h1>
-    <p style='text-align: center; color: #888888; font-family: monospace;'>[SECURITY STATUS: CLASSIFIED] LEVEL-4 REAL-TIME VECTOR NETWORKS</p>
+    <style>
+    /* Full Dark Background */
+    .stApp {
+        background-color: #0B0F19 !important;
+        color: #E2E8F0 !important;
+    }
+    /* Metric Cards Styling */
+    div[data-testid="stMetricSimpleValue"] {
+        font-family: 'Courier New', monospace !important;
+        color: #00FF66 !important;
+        font-size: 2rem !important;
+        font-weight: bold;
+    }
+    div[data-testid="stMetricLabel"] {
+        font-family: 'Courier New', monospace !important;
+        color: #8A99AD !important;
+    }
+    /* Custom Scientist Container */
+    .lab-card {
+        background-color: #111827;
+        border: 1px solid #1F2937;
+        border-left: 4px solid #00FF66;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+    }
+    .danger-card {
+        background-color: #111827;
+        border: 1px solid #1F2937;
+        border-left: 4px solid #FF3333;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+    }
+    </style>
     """, unsafe_allow_html=True)
 
-st.sidebar.markdown("<h2 style='color: #00FF66; font-family: monospace;'>📡 System Control</h2>", unsafe_allow_html=True)
-st.sidebar.info("Radar Status: ACTIVE\n\n3D Engine: LIVE\n\nTargeting Computer: LOCKED")
+# 3. Top Cyber Header
+st.markdown("""
+    <div style='background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #00FF66; box-shadow: 0px 0px 15px rgba(0, 255, 102, 0.2); margin-bottom: 25px;'>
+        <h1 style='text-align: center; color: #00FF66; font-family: monospace; margin:0; letter-spacing: 2px;'>🛸 NORAD SYSTEMS: SPACE SITUATIONAL AWARENESS (SSA)</h1>
+        <p style='text-align: center; color: #8A99AD; font-family: monospace; margin: 5px 0 0 0;'>[ CLASSIFIED CORE INFRASTRUCTURE ] // REAL-TIME ORBITAL CONJUNCTION RADAR</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# ਲਾਈਵ Celestrak API ਤੋਂ TLE ਡਾਟਾ ਲਿਆਉਣ ਲਈ ਫੰਕਸ਼ਨ
+# 4. Sidebar System Stats
+st.sidebar.markdown("<h2 style='color: #00FF66; font-family: monospace;'>📡 SYSTEM TELEMETRY</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("""
+<div style='font-family: monospace; background-color: #111827; padding: 15px; border-radius: 6px; border: 1px solid #1F2937;'>
+    <p style='color: #00FF66; margin: 5px 0;'>● RADAR: ACTIVE</p>
+    <p style='color: #00FF66; margin: 5px 0;'>● INTERFACE: EXPERT LAB</p>
+    <p style='color: #00FF66; margin: 5px 0;'>● CORE ENGINE: ONLINE</p>
+    <p style='color: #FFA500; margin: 5px 0;'>● THREAT DETECTION: AUTO</p>
+</div>
+""", unsafe_allow_html=True)
+
+# 5. Fetch Live Data from Celestrak API
 @st.cache_data(ttl=3600)
 def fetch_live_satellite_data():
     url = "https://celestrak.org"
@@ -27,7 +76,6 @@ def fetch_live_satellite_data():
             data = response.json()
             live_sats = {}
             targets = ["ISS (ZARYA)", "TIANGONG", "HUBBLE SPACE TELESCOPE"]
-            
             for item in data:
                 name = item.get("OBJECT_NAME", "").strip()
                 if name in targets or (len(live_sats) < 4 and "STARLINK" in name):
@@ -38,149 +86,99 @@ def fetch_live_satellite_data():
                         "norad_id": item.get("NORAD_CAT_ID", "00000")
                     }
             return live_sats
-    except Exception as e:
+    except:
         pass
-    
     return {
-        "ISS (ZARYA) [OFFLINE]": {"inc": 51.6391, "raan": 180.2031, "n": 15.49321473, "norad_id": "25544"},
+        "ISS (ZARYA)": {"inc": 51.6391, "raan": 180.2031, "n": 15.49321473, "norad_id": "25544"},
         "STARLINK-1044": {"inc": 53.0542, "raan": 210.1543, "n": 15.05432110, "norad_id": "44713"},
         "TIANGONG": {"inc": 41.5843, "raan": 110.3214, "n": 15.61024530, "norad_id": "48274"}
     }
 
-# ਲਾਈਵ ਡਾਟਾ ਲੋਡ ਕਰੋ
-with st.spinner("⚡ Initializing 3D Tactical Mapping Engine..."):
-    protected_satellites = fetch_live_satellite_data()
-
+protected_satellites = fetch_live_satellite_data()
 debris = {"inc": 74.0322, "raan": 124.2311, "n": 15.12053140}
 
-# 3D ਨਕਸ਼ੇ ਲਈ ਸੈਟੇਲਾਈਟਾਂ ਦੇ ਭੂਗੋਲਿਕ ਕੋਆਰਡੀਨੇਟਸ (Latitude/Longitude) ਤਿਆਰ ਕਰਨਾ
-map_data = []
-t_now = time.time() / 60.0  # ਮੌਜੂਦਾ ਸਮਾਂ ਮਿੰਟਾਂ ਵਿੱਚ
+# 6. Advanced 2D/3D Radar Map Plotting
+st.markdown("<h3 style='font-family: monospace; color: #00FF66;'>🖥️ LIVE ORBITAL VECTOR SIMULATION</h3>", unsafe_allow_html=True)
 
-for sat_name, param in protected_satellites.items():
-    # ਔਰਬਿਟਲ ਮੈਥ ਮਾਡਲ ਨੂੰ 2D/3D ਮੈਪ ਪੋਜੀਸ਼ਨਾਂ ਵਿੱਚ ਬਦਲਣਾ
-    angle = (param["n"] * (t_now % 1440) * 2 * math.pi) / 100
-    lon = ((param["raan"] + math.degrees(math.cos(angle))) % 360) - 180
-    lat = (param["inc"] * math.sin(angle))
-    
-    map_data.append({
-        "name": sat_name,
-        "lon": lon,
-        "lat": lat,
-        "radius": 150000,
-        "color": [0, 255, 102, 200]  # ਚਮਕਦਾਰ ਹਰਾ ਰੰਗ
-    })
+t_now = time.time() / 60.0
+coordinates = []
 
-# ਸਪੇਸ ਕੂੜੇ (Debris) ਦੀ ਪੋਜੀਸ਼ਨ
-deb_angle = (debris["n"] * (t_now % 1440) * 2 * math.pi) / 100
-deb_lon = ((debris["raan"] + math.degrees(math.cos(deb_angle))) % 360) - 180
-deb_lat = (debris["inc"] * math.sin(deb_angle))
-map_data.append({
-    "name": "🚨 DETECTED DEBRIS",
-    "lon": deb_lon,
-    "lat": deb_lat,
-    "radius": 200000,
-    "color": [255, 51, 51, 255]  # ਖ਼ਤਰੇ ਲਈ ਚਮਕਦਾਰ ਲਾਲ ਰੰਗ
-})
+for name, param in protected_satellites.items():
+    for minutes in range(0, 1440, 20): # Generate clean orbit path lines
+        angle = (param["n"] * (t_now + minutes) * 2 * math.pi) / 100
+        lon = ((param["raan"] + math.degrees(math.cos(angle))) % 360) - 180
+        lat = (param["inc"] * math.sin(angle))
+        coordinates.append({"Asset": name, "Longitude (X)": lon, "Latitude (Y)": lat})
 
-df_map = pd.DataFrame(map_data)
+# Add Debris Path
+for minutes in range(0, 1440, 20):
+    deb_angle = (debris["n"] * (t_now + minutes) * 2 * math.pi) / 100
+    d_lon = ((debris["raan"] + math.degrees(math.cos(deb_angle))) % 360) - 180
+    d_lat = (debris["inc"] * math.sin(deb_angle))
+    coordinates.append({"Asset": "🚨 SPACE DEBRIS", "Longitude (X)": d_lon, "Latitude (Y)": d_lat})
 
-# 🔬 SECTION 1: 3D SCIENTIST LAB GRAPHICS
-st.markdown("<h3 style='font-family: monospace; color: #00FF66;'>🖥️ 3D Tactical Orbit Simulation View</h3>", unsafe_allow_html=True)
+df_coords = pd.DataFrame(coordinates)
 
-# Pydeck ਦੀ ਵਰਤੋਂ ਕਰਕੇ ਡਾਰਕ ਗਲੋਬਲ ਮੈਪ ਬਣਾਉਣਾ
-view_state = pdk.ViewState(latitude=20.0, longitude=0.0, zoom=1, pitch=45, bearing=0)
-layer = pdk.Layer(
-    "ScatterplotLayer",
-    df_map,
-    get_position="[lon, lat]",
-    get_color="color",
-    get_radius="radius",
-    pickable=True,
+# Beautiful Neon Scatter Chart representing the scientist lab grid
+st.scatter_chart(
+    df_coords,
+    x="Longitude (X)",
+    y="Latitude (Y)",
+    color="Asset",
+    use_container_width=True,
+    height=380
 )
-
-r = pdk.Deck(
-    layers=[layer],
-    initial_view_state=view_state,
-    map_style="mapbox://styles/mapbox/dark-v10", # ਲੈਬ ਵਰਗੀ ਡਾਰਕ ਲੁੱਕ
-    tooltip={"text": "{name}\nLon: {lon}\nLat: {lat}"}
-)
-st.pydeck_chart(r)
 
 def calculate_distance(sat, deb, t_minutes):
     dt = t_minutes / 1440.0
     sat_anomaly = (sat["n"] * dt * 2 * math.pi)
     deb_anomaly = (deb["n"] * dt * 2 * math.pi)
-    
     x1 = 6738.1 * math.cos(sat_anomaly) * math.cos(math.radians(sat["raan"]))
     y1 = 6738.1 * math.sin(sat_anomaly) * math.cos(math.radians(sat["inc"]))
-    
     x2 = 6750.0 * math.cos(deb_anomaly) * math.cos(math.radians(debris["raan"]))
     y2 = 6750.0 * math.sin(deb_anomaly) * math.cos(math.radians(debris["inc"]))
-    
-    dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-    return dist
+    return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
-# 📡 RADAR SWEEP EXECUTION
-if st.button("📡 EXECUTE FULL RADAR SWEEP", type="primary", use_container_width=True):
+st.markdown("<br>", unsafe_allow_html=True)
+
+# 7. Proximity Control Grid
+if st.button("📡 INITIALIZE RADAR SWEEP NETWORK", type="primary", use_container_width=True):
     results = []
     
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-    
-    for idx, (sat_name, param) in enumerate(protected_satellites.items()):
-        status_text.text(f"Analyzing Conjunction Vector Matrix for {sat_name}...")
-        min_dist = float('inf')
+    with st.spinner("⚡ Correlating target matrices with threat vectors..."):
+        time.sleep(0.8)
+        for sat_name, param in protected_satellites.items():
+            min_dist = float('inf')
+            for minutes in range(1440):
+                dist = calculate_distance(param, debris, minutes)
+                if dist < min_dist:
+                    min_dist = dist
+            
+            status = "🚨 THREAT DETECTION" if min_dist < 500.0 else "✅ NOMINAL"
+            results.append({"Asset": sat_name, "NORAD ID": param["norad_id"], "Closest Approach": min_dist, "Status": status})
         
-        for minutes in range(1440):
-            dist = calculate_distance(param, debris, minutes)
-            if dist < min_dist:
-                min_dist = dist
+        df_results = pd.DataFrame(results)
         
-        progress_bar.progress(int((idx + 1) / len(protected_satellites) * 100))
-        
-        status = "🚨 CONJUNCTION DANGER" if min_dist < 500.0 else "✅ ORBIT NOMINAL"
-        results.append({
-            "Satellite / Asset": sat_name,
-            "NORAD ID": param["norad_id"],
-            "Inclination": f"{param['inc']:.2f}°",
-            "Closest Approach": round(min_dist, 2),
-            "Status": status
-        })
-    
-    time.sleep(0.5)
-    progress_bar.empty()
-    status_text.empty()
-    
-    df = pd.DataFrame(results)
-    
-    def style_scientist_table(val):
-        if "DANGER" in str(val):
-            return 'background-color: #2b0000; color: #FF3333; font-weight: bold; border: 1px solid #FF3333;'
-        elif "NOMINAL" in str(val):
-            return 'background-color: #002b00; color: #00FF66; border: 1px solid #00FF66;'
-        return 'color: #CCCCCC; font-family: monospace;'
+        # Core Monitors (Scientist Blocks)
+        st.markdown("<h3 style='font-family: monospace; color: #00FF66;'>📊 REAL-TIME TELEMETRY MONITORS</h3>", unsafe_allow_html=True)
+        cols = st.columns(len(results))
+        for index, row in df_results.iterrows():
+            with cols[index]:
+                card_style = "danger-card" if "THREAT" in row["Status"] else "lab-card"
+                st.markdown(f"""
+                    <div class='{card_style}'>
+                        <h4 style='margin:0; color:#FFFFFF; font-family:monospace;'>🛰️ {row['Asset']}</h4>
+                        <p style='margin:5px 0 0 0; color:#8A99AD; font-size:12px; font-family:monospace;'>NORAD ID: {row['NORAD_ID']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                st.metric(label="Closest Approach Distance", value=f"{row['Closest Approach']:.2f} KM", delta=row["Status"])
 
-    styled_df = df.style.map(style_scientist_table, subset=['Status'])
-    
-    st.markdown("<h3 style='font-family: monospace; color: #00FF66;'>📊 Live Radar Telemetry Data Log</h3>", unsafe_allow_html=True)
-    st.dataframe(styled_df, use_container_width=True)
-    
-    st.markdown("<h3 style='font-family: monospace; color: #00FF66;'>🖥️ Real-time Core Monitors</h3>", unsafe_allow_html=True)
-    cols = st.columns(len(results))
-    for index, row in df.iterrows():
-        with cols[index]:
-            st.metric(
-                label=f"🛰️ {row['Satellite / Asset']}", 
-                value=f"{row['Closest Approach']} KM", 
-                delta="ALERT" if "DANGER" in row["Status"] else "OK",
-                delta_color="inverse" if "DANGER" in row["Status"] else "normal"
-            )
-
-st.markdown("<br><hr>", unsafe_allow_html=True)
+# 8. Sleek Cyber Footer
+st.markdown("<br><hr style='border-color: #1F2937;'>", unsafe_allow_html=True)
 st.markdown("""
-    <div style='text-align: center; font-family: monospace; color: #666666;'>
-        <h4>📬 Commercial Licensing & Custom Sovereign Vectors</h4>
-        <p>📩 Secure Comm: <b>contactkdtrader@gmail.com</b></p>
+    <div style='background-color: #111827; padding: 20px; border-radius: 8px; border: 1px solid #1F2937; text-align: center; font-family: monospace;'>
+        <h4 style='color: #00FF66; margin: 0 0 10px 0;'>📬 SOVEREIGN SSA ENGINE LICENSING</h4>
+        <p style='color: #8A99AD; margin: 0;'>Secure encrypted gateway for orbital logistics and analytics.</p>
+        <p style='color: #FFFFFF; margin: 10px 0 0 0;'>📩 SECURE EMAIL: <b>contactkdtrader@gmail.com</b></p>
     </div>
     """, unsafe_allow_html=True)
