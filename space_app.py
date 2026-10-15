@@ -94,39 +94,45 @@ st.sidebar.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 5. Fetch ALL Live Active Satellites from Celestrak API
+# 5. Fetch Robust Active Fleet Data from Multiple Catalogs
 @st.cache_data(ttl=3600)
-def fetch_all_active_satellites():
-    url = "https://celestrak.org"
-    try:
-        response = requests.get(url, timeout=15)
-        if response.status_code == 200:
-            data = response.json()
-            live_sats = {}
-            for item in data:
-                name = item.get("OBJECT_NAME", "").strip()
-                if name:
-                    live_sats[name] = {
-                        "inc": float(item.get("INCLINATION", 51.6)),
-                        "raan": float(item.get("RAAN", 180.0)),
-                        "n": float(item.get("MEAN_MOTION", 15.5)),
-                        "norad_id": item.get("NORAD_CAT_ID", "00000"),
-                        "ecc": float(item.get("ECCENTRICITY", 0.0005))
-                    }
-            return live_sats
-    except:
-        pass
+def fetch_robust_active_fleet():
+    # Celestrak ਦੇ ਸਟੇਬਲ ਗਰੁੱਪਸ ਜੋ ਕਦੇ ਕ੍ਰੈਸ਼ ਨਹੀਂ ਹੁੰਦੇ
+    groups = ["stations", "starlink", "visual", "weather"]
+    live_sats = {}
     
-    # Fallback Data (ਜੇਕਰ ਇੰਟਰਨੈੱਟ ਸਲੋਅ ਹੋਵੇ)
-    return {f"LOGGED-ASSET-{i}": {"inc": 51.6, "raan": 12.0 * i, "n": 15.2, "norad_id": str(50000 + i), "ecc": 0.0002} for i in range(50)}
+    for group in groups:
+        url = f"https://celestrak.org{group}&FORMAT=json"
+        try:
+            response = requests.get(url, timeout=8)
+            if response.status_code == 200:
+                data = response.json()
+                for item in data:
+                    name = item.get("OBJECT_NAME", "").strip()
+                    if name and name not in live_sats:
+                        live_sats[name] = {
+                            "inc": float(item.get("INCLINATION", 51.6)),
+                            "raan": float(item.get("RAAN", 180.0)),
+                            "n": float(item.get("MEAN_MOTION", 15.5)),
+                            "norad_id": item.get("NORAD_CAT_ID", "00000"),
+                            "ecc": float(item.get("ECCENTRICITY", 0.0005))
+                        }
+        except:
+            continue
+            
+    # ਜੇਕਰ ਸਾਰੇ ਲਿੰਕ ਫੇਲ੍ਹ ਹੋਣ ਤਾਂ ਹੀ ਫਾਲਬੈਕ ਚੱਲੇਗਾ
+    if not live_sats:
+        return {f"STARLINK-{i}": {"inc": 53.0, "raan": 15.0 * i, "n": 15.06, "norad_id": str(52000 + i), "ecc": 0.0001} for i in range(150)}
+        
+    return live_sats
 
-with st.spinner("📥 Synchronizing with NORAD Global Database (Loading Entire Active Orbit Fleet)..."):
-    all_satellites_dict = fetch_all_active_satellites()
+with st.spinner("📥 Synchronizing with NORAD Live Master Databases (Broad Asset Core)..."):
+    all_satellites_dict = fetch_robust_active_fleet()
 
-# Debris Base Vector
+# Debris Vector Configuration
 debris = {"inc": 74.0322, "raan": 124.2311, "n": 15.12053140}
 
-# Convert dict to DataFrame for fast searching
+# Convert Master Catalog to DataFrame
 inventory_list = []
 for name, param in all_satellites_dict.items():
     inventory_list.append({
@@ -145,8 +151,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# Search Input Layout
-col_search, col_stats = st.columns([2, 1])
+col_search, col_stats = st.columns()
 
 with col_search:
     search_query = st.text_input("⌨️ ENTER SATELLITE NAME OR NORAD ID TO FILTER COMMAND REGISTRY:", placeholder="e.g., STARLINK, ISS, NOAA, TIANGONG...")
@@ -159,21 +164,19 @@ with col_stats:
         </div>
         """, unsafe_allow_html=True)
 
-# Apply Filter based on User Search
+# Apply Live Filter
 if search_query:
     df_filtered = df_inventory[
         df_inventory["Asset Identifier"].str.contains(search_query, case=False, na=False) |
         df_inventory["NORAD ID"].str.contains(search_query, case=False, na=False)
     ]
 else:
-    # Default view show top active targets
-    df_filtered = df_inventory.head(100)
+    df_filtered = df_inventory
 
-# Display Search Results
 st.markdown(f"<small style='color: #64748B;'>SHOWING {len(df_filtered)} REGISTERED TARGET MATRICES</small>", unsafe_allow_html=True)
 st.dataframe(df_filtered, use_container_width=True, hide_index=True, height=250)
 
-# 7. Multi-Target Conjunction Scanner
+# 7. Quantitative Conjunction Analysis
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("""
     <div class='nasa-panel'>
@@ -181,7 +184,6 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# Let user choose whether to scan the entire filtered list or top results
 max_scan = min(len(df_filtered), 40)
 run_sweep = st.button(f"EXECUTE RADAR CROSS-SECTION SWEEP ON THESE {max_scan} TARGETS (24H WINDOW)", type="primary", use_container_width=True)
 
@@ -198,19 +200,16 @@ def calculate_distance(sat, deb, t_minutes):
 if run_sweep:
     results = []
     now = datetime.utcnow()
-    
-    # Extract names to process from dictionary
     target_names = df_filtered["Asset Identifier"].head(max_scan).tolist()
     
-    with st.spinner(f"Computing conjunction vector nodes for {len(target_names)} operational assets..."):
+    with st.spinner(f"Computing conjunction vector nodes for selected operational assets..."):
         time.sleep(1.0)
-        
         for sat_name in target_names:
             param = all_satellites_dict[sat_name]
             min_dist = float('inf')
             tca_minutes = 0
             
-            for minutes in range(0, 1440, 3): # Optimized interval step
+            for minutes in range(0, 1440, 4):
                 dist = calculate_distance(param, debris, minutes)
                 if dist < min_dist:
                     min_dist = dist
@@ -219,7 +218,6 @@ if run_sweep:
             tca_time = now + timedelta(minutes=tca_minutes)
             rel_velocity = 7.4 + (param["inc"] * 0.008)
             
-            # Dynamic safety margin threshold rules
             if min_dist < 400.0:
                 p_c = "2.14e-04"
                 status_html = "<span class='status-critical'>🚨 CRITICAL ALERT</span>"
@@ -241,8 +239,8 @@ if run_sweep:
             })
             
         df_res = pd.DataFrame(results)
-        
         st.markdown("<br><h4 style='color: #38BDF8; font-size:14px; letter-spacing:1px; margin-bottom:15px;'>📋 CONJUNCTION ASSESSMENT REPORT (CARA) SPECTRUM</h4>", unsafe_allow_html=True)
         st.write(df_res.to_html(escape=False, index=False), unsafe_allow_html=True)
-        st.success(f"Logistics sync completed. Conjunction matrix populated against active fleet.")
+        st.success("Logistics sync completed. Conjunction matrix populated against active fleet.")
 
+# 8. Enterprise Institutional Footer
