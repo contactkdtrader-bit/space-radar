@@ -97,7 +97,6 @@ st.sidebar.markdown(f"""
 # 5. Fetch Robust Active Fleet Data from Multiple Catalogs
 @st.cache_data(ttl=3600)
 def fetch_robust_active_fleet():
-    # Celestrak ਦੇ ਸਟੇਬਲ ਗਰੁੱਪਸ ਜੋ ਕਦੇ ਕ੍ਰੈਸ਼ ਨਹੀਂ ਹੁੰਦੇ
     groups = ["stations", "starlink", "visual", "weather"]
     live_sats = {}
     
@@ -120,7 +119,6 @@ def fetch_robust_active_fleet():
         except:
             continue
             
-    # ਜੇਕਰ ਸਾਰੇ ਲਿੰਕ ਫੇਲ੍ਹ ਹੋਣ ਤਾਂ ਹੀ ਫਾਲਬੈਕ ਚੱਲੇਗਾ
     if not live_sats:
         return {f"STARLINK-{i}": {"inc": 53.0, "raan": 15.0 * i, "n": 15.06, "norad_id": str(52000 + i), "ecc": 0.0001} for i in range(150)}
         
@@ -151,7 +149,8 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-col_search, col_stats = st.columns()
+# ਇੱਥੇ st.columns(2) ਲਿਖ ਕੇ 2 ਕਾਲਮ ਫਿਕਸ ਕਰ ਦਿੱਤੇ ਹਨ
+col_search, col_stats = st.columns(2)
 
 with col_search:
     search_query = st.text_input("⌨️ ENTER SATELLITE NAME OR NORAD ID TO FILTER COMMAND REGISTRY:", placeholder="e.g., STARLINK, ISS, NOAA, TIANGONG...")
@@ -244,3 +243,5 @@ if run_sweep:
         st.success("Logistics sync completed. Conjunction matrix populated against active fleet.")
 
 # 8. Enterprise Institutional Footer
+st.markdown("<br><hr style='border-color: #1E293B;'>", unsafe_allow_html=True)
+st.markdown("""
