@@ -135,7 +135,6 @@ def fetch_robust_active_fleet():
     live_sats = {}
     
     for group in groups:
-        # Fixed URL path routing string formatting
         url = f"https://celestrak.org{group}&FORMAT=json"
         try:
             response = requests.get(url, timeout=8)
@@ -248,3 +247,4 @@ if run_sweep:
         pass
         
     with st.spinner(f"Computing conjunction vector nodes for selected operational assets..."):
+        time.sleep(1.0)
