@@ -98,7 +98,7 @@ st.sidebar.markdown(f"""
 st.sidebar.markdown("<br>", unsafe_allow_html=True)
 st.sidebar.markdown("<h4 style='color: #38BDF8; font-size:13px; letter-spacing:1.5px;'>🛰️ ENTERPRISE PORTAL</h4>", unsafe_allow_html=True)
 
-# Replace 'YOUR_FORM_ID_HERE' with your Formspree Form ID (e.g. https://formspree.io/f/xbjnqweo)
+# Replace 'YOUR_FORM_ID_HERE' with your Formspree Form ID
 FORMSPREE_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID_HERE" 
 
 enterprise_html = f"""
@@ -122,6 +122,10 @@ enterprise_html = f"""
             SUBMIT DISPATCH 🚀
         </button>
     </form>
+    <div style="margin-top: 12px; text-align: center; border-top: 1px solid #1E293B; padding-top: 8px;">
+        <span style="color: #64748B; font-size: 10px;">DIRECT DISPATCH:</span><br>
+        <a href="mailto:contact.kdtrader@gmail.com" style="color: #38BDF8; font-size: 11px; text-decoration: none;">contact.kdtrader@gmail.com</a>
+    </div>
 </div>
 """
 
@@ -275,4 +279,4 @@ if run_sweep:
         st.success("Logistics sync completed. Conjunction matrix populated against active fleet.")
 
 # 8. Enterprise Institutional Footer
-st.markdown("<br><hr style='border: 0.5px solid #1E293B;'><div style='text-align: center; color: #64748B; font-size: 11px;'>GLOBAL SSA OPERATIONAL COMMAND // QUANTITATIVE TELEMETRY CORE</div>", unsafe_allow_html=True)
+st.markdown("<br><hr style='border: 0.5px solid #1E293B;'><div style='text-align: center; color: #64748B; font-size: 11px;'>GLOBAL SSA OPERATIONAL COMMAND // QUANTITATIVE TELEMETRY CORE // CONTACT: <a href='mailto:contact.kdtrader@gmail.com' style='color:#38BDF8; text-decoration:none;'>CONTACT.KDTRADER@GMAIL.COM</a></div>", unsafe_allow_html=True)
