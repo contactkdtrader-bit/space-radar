@@ -149,7 +149,6 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# ਇੱਥੇ st.columns(2) ਲਿਖ ਕੇ 2 ਕਾਲਮ ਫਿਕਸ ਕਰ ਦਿੱਤੇ ਹਨ
 col_search, col_stats = st.columns(2)
 
 with col_search:
@@ -242,6 +241,6 @@ if run_sweep:
         st.write(df_res.to_html(escape=False, index=False), unsafe_allow_html=True)
         st.success("Logistics sync completed. Conjunction matrix populated against active fleet.")
 
-# 8. Enterprise Institutional Footer
+# 8. Enterprise Institutional Footer (Fixed Triple Quote)
 st.markdown("<br><hr style='border-color: #1E293B;'>", unsafe_allow_html=True)
 st.markdown("""
