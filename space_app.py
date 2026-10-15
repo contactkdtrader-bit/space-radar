@@ -21,10 +21,12 @@ protected_satellites = {
 debris = {"inc": 74.0322, "raan": 124.2311, "n": 15.12053140}
 
 def calculate_distance(sat, deb, t_minutes):
+    # Pure vector calculation using orbital geometry angles
     dt = t_minutes / 1440.0
     sat_anomaly = (sat["n"] * dt * 2 * math.pi)
     deb_anomaly = (deb["n"] * dt * 2 * math.pi)
     
+    # Math matrices to flat earth-centered distance estimation
     x1 = 6738.1 * math.cos(sat_anomaly) * math.cos(math.radians(sat["raan"]))
     y1 = 6738.1 * math.sin(sat_anomaly) * math.cos(math.radians(sat["inc"]))
     
@@ -45,11 +47,13 @@ if st.button("🔄 Refresh Radar Scan", type="primary"):
         for sat_name, param in protected_satellites.items():
             min_dist = float('inf')
             
+            # 24 ਘੰਟੇ (1440 ਮਿੰਟ) ਦੀ ਗਣਨਾ
             for minutes in range(1440):
                 dist = calculate_distance(param, debris, minutes)
                 if dist < min_dist:
                     min_dist = dist
             
+            # ਸਪੇਸ ਸੁਰੱਖਿਆ ਮੀਟਰ
             status = "🚨 DANGER" if min_dist < 200.0 else "✅ SAFE"
             results.append({
                 "Satellite Name": sat_name, 
@@ -59,7 +63,7 @@ if st.button("🔄 Refresh Radar Scan", type="primary"):
         
         df = pd.DataFrame(results)
         
-        # ਸਟੇਟਸ ਦੇ ਹਿਸਾਬ ਨਾਲ ਰੰਗ ਬਦਲਣ ਲਈ ਸਟਾਈਲਿੰਗ
+        # ਸਟੇਟਸ ਦੇ ਹਿਸਾਬ ਨਾਲ ਰੰਗ ਬਦਲਣ ਲਈ ਸਟਾਈਲਿੰਗ ਫੰਕਸ਼ਨ
         def highlight_status(val):
             if val == "🚨 DANGER":
                 return 'background-color: #ffcccc; color: black; font-weight: bold;'
@@ -67,7 +71,8 @@ if st.button("🔄 Refresh Radar Scan", type="primary"):
                 return 'background-color: #ccffcc; color: black;'
             return ''
         
-        styled_df = df.style.applymap(highlight_status, subset=['Status'])
+        # ਨਵੇਂ Pandas ਵਰਜ਼ਨ ਲਈ .map() ਦੀ ਵਰਤੋਂ ਕੀਤੀ ਹੈ
+        styled_df = df.style.map(highlight_status, subset=['Status'])
         
         # UI ਤੇ ਡਾਟਾ ਦਿਖਾਉਣਾ
         st.dataframe(styled_df, use_container_width=True)
@@ -83,4 +88,4 @@ if st.button("🔄 Refresh Radar Scan", type="primary"):
 st.markdown("---")
 st.subheader("📬 Business & Inquiries")
 st.write("Want to buy this software or customize it for your satellites?")
-st.write("📩 Email me directly at: **contactkdtrader@gmail.com**")
+st.write("📩 Email me directly at: contactkdtrader@gmail.com")
