@@ -13,6 +13,9 @@ if "alert_sent" not in st.session_state:
     st.session_state.alert_sent = False
 
 def trigger_admin_email_notification(event_type, location, details):
+    """
+    Formspree Webhook ਰਾਹੀਂ ਤੁਹਾਡੀ ਈਮੇਲ 'ਤੇ ਤੁਰੰਤ ਲਾਈਵ ਨੋਟੀਫਿਕੇਸ਼ਨ ਭੇਜਣ ਲਈ ਸੁਰੱਖਿਅਤ ਫੰਕਸ਼ਨ
+    """
     webhook_url = "https://formspree.io" 
     payload = {
         "Subject": f"🚨 ALERT: New Client Activity on Space Radar",
@@ -26,6 +29,7 @@ def trigger_admin_email_notification(event_type, location, details):
     except:
         pass
 
+# Page Load ਹੋਣ 'ਤੇ ਚੁੱਪਚਾਪ ਵਿਜ਼ੀਟਰ ਦਾ ਡਾਟਾ ਕੈਪਚਰ ਕਰਕੇ ਈਮੇਲ ਭੇਜਣਾ
 try:
     headers = st.context.headers
     visitor_country = headers.get("X-Vercel-IP-Country", headers.get("Cloudflare-Ipcountry", "GLOBAL REGION"))
@@ -83,7 +87,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# 4. Tactical Sidebar Telemetry Controls
+# 4. Tactical Sidebar Telemetry Controls (With India Sync Node)
 st.sidebar.markdown("<h4 style='color: #38BDF8; font-size:14px; letter-spacing:1px;'>📡 HARDWARE TELEMETRY</h4>", unsafe_allow_html=True)
 st.sidebar.markdown(f"""
 <div style='font-size: 12px; background-color: #0D1326; padding: 15px; border-radius: 4px; border: 1px solid #1E293B; line-height: 1.8;'>
@@ -194,7 +198,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 max_scan = min(len(df_filtered), 40)
-run_sweep = st.button("EXECUTE RADAR CROSS-SECTION SWEEP ON THESE TARGETS (24H WINDOW)", type="primary", use_container_width=True)
+run_sweep = st.button(f"EXECUTE RADAR CROSS-SECTION SWEEP ON THESE {max_scan} TARGETS (24H WINDOW)", type="primary", use_container_width=True)
 
 def calculate_distance(sat, deb, t_minutes):
     dt = t_minutes / 1440.0
@@ -237,8 +241,3 @@ if run_sweep:
                 status = "🚨 CRITICAL ALERT"
             elif min_dist < 1200.0:
                 p_c = "5.82e-06"
-                status = "⚠️ WARNING"
-            else:
-                p_c = "< 1e-07"
-                status = "✅ NOMINAL"
-                
