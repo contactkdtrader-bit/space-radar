@@ -13,9 +13,6 @@ if "alert_sent" not in st.session_state:
     st.session_state.alert_sent = False
 
 def trigger_admin_email_notification(event_type, location, details):
-    """
-    Formspree Webhook ਰਾਹੀਂ ਤੁਹਾਡੀ ਈਮੇਲ 'ਤੇ ਤੁਰੰਤ ਲਾਈਵ ਨੋਟੀਫਿਕੇਸ਼ਨ ਭੇਜਣ ਲਈ ਸੁਰੱਖਿਅਤ ਫੰਕਸ਼ਨ
-    """
     webhook_url = "https://formspree.io" 
     payload = {
         "Subject": f"🚨 ALERT: New Client Activity on Space Radar",
@@ -29,7 +26,6 @@ def trigger_admin_email_notification(event_type, location, details):
     except:
         pass
 
-# Page Load ਹੋਣ 'ਤੇ ਚੁੱਪਚਾਪ ਵਿਜ਼ੀਟਰ ਦਾ ਡਾਟਾ ਕੈਪਚਰ ਕਰਕੇ ਈਮੇਲ ਭੇਜਣਾ
 try:
     headers = st.context.headers
     visitor_country = headers.get("X-Vercel-IP-Country", headers.get("Cloudflare-Ipcountry", "GLOBAL REGION"))
@@ -69,31 +65,6 @@ st.markdown("""
         padding-bottom: 8px;
         margin-bottom: 15px;
     }
-    .status-nominal {
-        color: #4ADE80;
-        background-color: rgba(74, 222, 128, 0.1);
-        padding: 2px 8px;
-        border-radius: 3px;
-        font-size: 12px;
-        border: 1px solid rgba(74, 222, 128, 0.3);
-    }
-    .status-warning {
-        color: #FFA500;
-        background-color: rgba(255, 165, 0, 0.1);
-        padding: 2px 8px;
-        border-radius: 3px;
-        font-size: 12px;
-        border: 1px solid rgba(255, 165, 0, 0.3);
-    }
-    .status-critical {
-        color: #F87171;
-        background-color: rgba(248, 113, 113, 0.1);
-        padding: 2px 8px;
-        border-radius: 3px;
-        font-size: 12px;
-        border: 1px solid rgba(248, 113, 113, 0.3);
-        font-weight: bold;
-    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -106,13 +77,13 @@ st.markdown("""
                 <p style='color: #64748B; margin: 3px 0 0 0; font-size: 12px;'>NORAD & ISRO NETRA GLOBAL MASTER FLEET REGISTRY // QUANTITATIVE RISK CORE</p>
             </div>
             <div style='text-align: right;'>
-                <span class='status-nominal'>SYSTEM STATUS: ACTIVE</span>
+                <span style="color: #4ADE80; background-color: rgba(74, 222, 128, 0.1); padding: 4px 12px; border-radius: 3px; font-size: 12px; border: 1px solid rgba(74, 222, 128, 0.3);">SYSTEM STATUS: ACTIVE</span>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-# 4. Tactical Sidebar Telemetry Controls (With India Sync Node)
+# 4. Tactical Sidebar Telemetry Controls
 st.sidebar.markdown("<h4 style='color: #38BDF8; font-size:14px; letter-spacing:1px;'>📡 HARDWARE TELEMETRY</h4>", unsafe_allow_html=True)
 st.sidebar.markdown(f"""
 <div style='font-size: 12px; background-color: #0D1326; padding: 15px; border-radius: 4px; border: 1px solid #1E293B; line-height: 1.8;'>
@@ -240,7 +211,6 @@ if run_sweep:
     now = datetime.utcnow()
     target_names = df_filtered["Asset Identifier"].head(max_scan).tolist()
     
-    # Trigger an email alert specifically when someone presses the "Execute Radar Sweep" button
     try:
         trigger_admin_email_notification("RADAR_SWEEP_EXECUTED (Active Assessment Clicked)", visitor_country, f"Targets Scanned: {max_scan}")
     except:
@@ -248,3 +218,28 @@ if run_sweep:
         
     with st.spinner(f"Computing conjunction vector nodes for selected operational assets..."):
         time.sleep(1.0)
+        for sat_name in target_names:
+            param = all_satellites_dict[sat_name]
+            min_dist = float('inf')
+            tca_minutes = 0
+            
+            for minutes in range(0, 1440, 4):
+                dist = calculate_distance(param, debris, minutes)
+                if dist < min_dist:
+                    min_dist = dist
+                    tca_minutes = minutes
+            
+            tca_time = now + timedelta(minutes=tca_minutes)
+            rel_velocity = 7.4 + (param["inc"] * 0.008)
+            
+            if min_dist < 400.0:
+                p_c = "2.14e-04"
+                status = "🚨 CRITICAL ALERT"
+            elif min_dist < 1200.0:
+                p_c = "5.82e-06"
+                status = "⚠️ WARNING"
+            else:
+                p_c = "< 1e-07"
+                status = "✅ NOMINAL"
+                
+            results.append({
