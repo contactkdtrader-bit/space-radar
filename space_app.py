@@ -128,7 +128,7 @@ with st.sidebar.form("enterprise_access_form", clear_on_submit=True):
             st.sidebar.error("Valid email required.")
 
 st.sidebar.markdown(
-    "<div style='text-align: center; color: #64748B; font-size: 10px; margin-top: 10px;'>DIRECT DISPATCH: <a href='mailto:contact.kdtrader@gmail.com' style='color: #38BDF8; text-decoration: none;'>contact.kdtrader@gmail.com</a></div>",
+    "<div style='text-align: center; font-size: 10px; color: #64748B; margin-top: 10px;'>DIRECT DISPATCH: <a href='mailto:contact.kdtrader@gmail.com' style='color: #38BDF8; text-decoration: none;'>contact.kdtrader@gmail.com</a></div>",
     unsafe_allow_html=True,
 )
 
